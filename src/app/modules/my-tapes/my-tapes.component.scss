@@ -1,0 +1,38 @@
+// section {
+//   display: flex;
+//   flex-wrap: wrap;
+
+//   div {
+//     flex-basis: calc(100% / 5);
+//   }
+// }
+
+:host {
+  height: 100%;
+  // overflow-y: scroll;
+}
+
+section {
+  // display: grid;
+  // grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  // grid-template-rows: 50px 50px 50px;
+
+  // display: grid;
+  // grid-template-columns: repeat(5, 1fr);
+  // gap: 10px;
+  // grid-auto-rows: minmax(1fr, auto);
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  // grid-gap: 1rem;
+
+  .card {
+    position: relative;
+
+    &::before {
+      content: "";
+      display: block;
+      padding-bottom: 100%;
+    }
+  }
+}

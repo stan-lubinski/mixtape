@@ -1,6 +1,9 @@
-import { Component, OnInit } from '@angular/core';
-import { environment } from 'src/environments/environment';
-import { AuthService } from './auth.service';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
+import { filter } from 'rxjs';
+import { AuthService } from './services/auth.service';
+import { CurrentUserService } from './services/current-user.service';
 
 @Component({
   selector: 'app-root',
@@ -8,50 +11,64 @@ import { AuthService } from './auth.service';
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+
+  get user() {
+    return this.currentUserService.user;
+  }
+
   title = 'mixtape';
 
-  constructor(private authService: AuthService) {}
+  get isAuthenticated(): boolean {
+    return this.authService.isAuthenticated();
+  }
+
+  constructor(
+    private authService: AuthService,
+    private currentUserService: CurrentUserService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
-    console.log(environment.client_id);
+    // this.usersService.getCurrentUser().subscribe();
+    if (this.isAuthenticated) {
+      this.currentUserService
+        .getCurrentUser()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe();
+    }
+    this.router.events
+      .pipe(filter((ev) => ev.type === 1))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        const code = this.route.snapshot.queryParamMap.get('code');
+        if (code && !this.authService.isAuthenticated()) {
+          this.authService
+            .getAccessToken(code)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe();
+        }
+      });
   }
 
   redirectToAuth() {
-    console.log(this.authService);
-    this.authService.testFunc();
-    // this.authService.redirectToAuthCodeFlow(environment.client_id);
+    this.authService.redirectToAuthCodeFlow();
   }
 
-  getToken() {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    if (code) {
-      this.authService.getAccessToken(environment.client_id, code).subscribe();
-    }
+  // getToken() {
+  //   const params = new URLSearchParams(window.location.search);
+  //   const code = params.get('code');
+  //   if (code) {
+  //     this.authService.getAccessToken(code).subscribe();
+  //   }
+  // }
 
-    // res
-    //     access_token
-    // :
-    // "BQDW3aLvDeAoKGluZe9Itn7JpYbC0xZmymsmRWHxSkZugcNvOajRh-0kTtXaQM6sq-LENisZb4saW-wjXCpEnUjGsrFk1PqrTONUcxJGHNUfA6p-OattBaddLSS7IlDtJgGVg2JcsVTJEAxw2tMVxtStjyRoNApF9gYbixs5bJjbX-3vvi-EHcPcKpigs0BW6cASBakV545RDw8wy-Cnvg"
-    // expires_in
-    // :
-    // 3600
-    // refresh_token
-    // :
-    // "AQAdNI4_wTLr2jf2WWAvib4FWqfy5vjgf28JFSyYTD_i5WoaVYdC8lc_goIJIyY8VPVUI6bedcdNBquzWeuFhaNkS6s06C5DshMkpSiEinz-Z_WOYWLlhdnLtVI-F3Bds5g"
-    // scope
-    // :
-    // "user-read-email user-read-private"
-    // token_type
-    // :
-    // "Bearer"
-  }
-
-  refreshToken() {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    if (code) {
-      this.authService.refreshAccessToken(code).subscribe();
-    }
-  }
+  // refreshToken() {
+  //   const params = new URLSearchParams(window.location.search);
+  //   const code = params.get('code');
+  //   if (code) {
+  //     this.authService.refreshAccessToken().subscribe();
+  //   }
+  // }
 }

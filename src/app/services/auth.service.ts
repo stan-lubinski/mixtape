@@ -2,28 +2,23 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { UsersService } from './users.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  http = inject(HttpClient);
-  private clientId = 'e44bccb0ca284c28bc7c7590bd016e82';
+  private http = inject(HttpClient);
+  private usersService = inject(UsersService);
   code = undefined;
 
-  constructor() {}
-
-  testFunc() {}
-
-  redirectToAuthCodeFlow(clientId: string) {
-    console.log(clientId);
-
+  redirectToAuthCodeFlow() {
     const verifier: string = this.generateCodeIdentifier(128);
     this.generateCodeChallenge(verifier).then((challenge) => {
       localStorage.setItem('verifier', verifier);
 
       const body = new URLSearchParams();
-      body.append('client_id', clientId);
+      body.append('client_id', environment.client_id);
       body.append('response_type', 'code');
       body.append('redirect_uri', 'http://localhost:4200');
       body.append('scope', 'user-read-private user-read-email');
@@ -33,22 +28,22 @@ export class AuthService {
     });
   }
 
-  async guardFunction() {
-    const clientId = 'your_client_id';
-    const body = new URLSearchParams(window.location.search);
-    const code = body.get('code');
+  // async guardFunction() {
+  //   const clientId = 'your_client_id';
+  //   const body = new URLSearchParams(window.location.search);
+  //   const code = body.get('code');
 
-    if (!code) {
-      this.redirectToAuthCodeFlow(clientId);
-    } else {
-      const accessToken = await this.getAccessToken(clientId, code);
-      // const profile = await this.fetchProfile(accessToken);
-      // console.log(profile);
-    }
-  }
+  //   if (!code) {
+  //     this.redirectToAuthCodeFlow(clientId);
+  //   } else {
+  //     // const accessToken = await this.getAccessToken(clientId, code);
+  //     // const profile = await this.fetchProfile(accessToken);
+  //     // console.log(profile);
+  //   }
+  // }
 
   // TODO: type
-  getAccessToken(clientId: string, code: string): Observable<any> {
+  getAccessToken(code: string): Observable<any> {
     const verifier = localStorage.getItem('verifier');
 
     const body = new URLSearchParams();
@@ -69,30 +64,23 @@ export class AuthService {
           console.log(res);
           localStorage.setItem('refresh_token', res.refresh_token);
           localStorage.setItem('access_token', res.access_token);
+          // const userSub: Subscription = this.usersService
+          //   .getCurrentUser()
+          //   .subscribe(() => userSub.unsubscribe());
         })
       );
-
-    // const result = await fetch('https://accounts.spotify.com/api/token', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    //   body: body,
-    // });
-
-    // const { access_token } = await result.json();
-    // return access_token;
   }
 
-  refreshAccessToken(code: string) {
-    const verifier = localStorage.getItem('verifier');
+  refreshAccessToken() {
+    console.log('refresh token');
+
     const refreshToken = localStorage.getItem('refresh_token');
 
     const body = new URLSearchParams();
     body.append('grant_type', 'refresh_token');
     body.append('refresh_token', refreshToken!);
     body.append('client_id', environment.client_id);
-    // body.append('code', code);
-    // body.append('redirect_uri', 'http://localhost:4200');
-    // body.append('code_verifier', verifier!);
+    body.append('client_secret', '8a5a0e53a80d448a9ccdd78e8477689a');
 
     return this.http
       .post('https://accounts.spotify.com/api/token', body, {
@@ -102,25 +90,15 @@ export class AuthService {
       })
       .pipe(
         tap((res: any) => {
-          console.log(res);
-          localStorage.setItem('refresh_token', res.refresh_token);
+          if (res.refresh_token) {
+            localStorage.setItem('refresh_token', res.refresh_token);
+          }
           localStorage.setItem('access_token', res.access_token);
         })
       );
   }
 
-  // create separate service for profile requests
-  async fetchProfile(token: string): Promise<any> {
-    const result = await fetch('https://api.spotify.com/v1/me', {
-      method: 'GET',
-      // headers: { Authorization: `Bearer ${token}` },
-    });
-
-    return await result.json();
-  }
-
   isAuthenticated(): boolean {
-    // return true;
     return !!localStorage.getItem('access_token');
   }
 

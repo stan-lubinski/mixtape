@@ -1,11 +1,39 @@
 <section class=" h-full pl-12 pr-12">
   <!-- TODO: expanding sphere on hover -->
-  <div class="card bg-stone-800 flex justify-center items-center">
+  <div class="card bg-stone-800 group flex justify-center items-center cursor-pointer rounded-md">
     <div class="flex flex-col items-center justify-center">
-      <span class="text-9xl">+</span>
-      <span class="text-xl">New</span>
+      <span class="text-9xl group-hover:scale-110 transition-transform">+</span>
+      <span class="text-xl group-hover:scale-110 group-hover:underline transition-transform">New</span>
     </div>
   </div>
-  <div *ngFor="let item of mockData"
-       class="card bg-stone-800 m-2"></div>
+  <ng-container *ngIf="playlists$ | async">
+    <ng-container *ngFor="let item of (playlists$ | async)?.items">
+      <div class="card rounded-md bg-stone-800 flex items-center justify-center p-3">
+        <svg xmlns="http://www.w3.org/2000/svg"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke-width="1.5"
+             stroke="currentColor"
+             class="w-16 h-16">
+          <path stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
+        </svg>
+        <p>{{item?.name}}</p>
+      </div>
+    </ng-container>
+    <!-- <div *ngFor="let item of (playlists$ | async)?.items"
+         class="card bg-stone-800 flex items-center justify-center p-3">\
+      <svg xmlns="http://www.w3.org/2000/svg"
+           fill="none"
+           viewBox="0 0 24 24"
+           stroke-width="1.5"
+           stroke="currentColor"
+           class="w-16 h-16">
+        <path stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
+      </svg>
+    </div> -->
+  </ng-container>
 </section>

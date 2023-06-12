@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 
 const routes: Routes = [
   {
@@ -12,6 +12,7 @@ const routes: Routes = [
         return AuthService.prototype.isAuthenticated();
       },
     ],
+    // resolve: { user: currentUserResolver },
   },
   {
     path: 'create-tape',
@@ -24,6 +25,13 @@ const routes: Routes = [
     //     return AuthService.prototype.isAuthenticated();
     //   },
     // ],
+  },
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./components/not-found/not-found.component').then(
+        (m) => m.NotFoundComponent
+      ),
   },
 ];
 

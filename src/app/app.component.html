@@ -1,31 +1,35 @@
 <main class="bg-primary h-screen flex flex-col text-secondary overflow-hidden subpixel-antialiased">
-  <header class="w-full h-20 flex items-center justify-between font-bold pl-12 pr-12">
+  <header class="w-full pt-3 pb-3 flex items-center justify-between font-bold pl-12 pr-12">
     <div class="flex gap-5">
       <h1 class="text-4xl "><a href="">Mixtape<span class="text-4xl text-accent">.</span></a></h1>
     </div>
-    <input type="text"
+    <!-- <input type="text"
            class="pt-3 pb-3 pr-5 pl-5 rounded-full text-primary focus:outline-none"
-           placeholder="Search your tapes">
-    <nav class="flex gap-5 text-2xl h-10 items-end">
+           placeholder="Search your tapes"> -->
+    <nav class="flex gap-5 text-2xl h-10 items-center">
       <!-- <button [routerLink]="['/create-tape']"
               [routerLinkActive]="'hidden'"
               class="pt-3 pb-3 pr-5 pl-5 bg-accent rounded-full text-lg hover:bg-secondary hover:text-primary hover:scale-105 transition-all self-center">New Tape</button> -->
       <a [routerLink]="['/my-tapes']"
          [routerLinkActive]="'underline decoration-accent'"
          class="hover:scale-105 hover:underline transition-transform">My tapes</a>
-      <a href="#"
-         class="hover:scale-105 hover:underline transition-transform">About</a>
+      <!-- <a href="#"
+         class="hover:scale-105 hover:underline transition-transform">About</a> -->
       <button (click)="redirectToAuth()"
+              *ngIf="!isAuthenticated"
               class="pt-2 pb-2 pr-4 pl-4 bg-accent rounded-full text-lg hover:bg-secondary hover:text-primary hover:scale-105 transition-all self-center">
         Log in
       </button>
-
+      <div class="rounded-full w-10 h-10 overflow-hidden"
+           *ngIf="user">
+        <!-- <ng-container *ngIf="user?.images && user?.images?.length"> -->
+        <img [src]="user.images[0].url"
+             alt="Current users profile picture">
+        <!-- </ng-container> -->
+      </div>
     </nav>
   </header>
-  <!-- <button (click)="redirectToAuth()">Redirect to Auth</button>
-  <button (click)="getToken()">Get token</button>
-  <button (click)="refreshToken()">Refresh token</button> -->
-  <section class="overflow-y-scroll">
+  <section class="overflow-y-auto">
     <router-outlet></router-outlet>
   </section>
   <!-- <section class=" p-12 flex flex-col items-center justify-center h-full gap-7">

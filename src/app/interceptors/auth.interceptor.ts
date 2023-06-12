@@ -6,13 +6,14 @@ import {
   HttpRequest,
 } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Observable, catchError, switchMap } from 'rxjs';
-import { environment } from 'src/environments/environment';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   authService = inject(AuthService);
+  route = inject(ActivatedRoute);
 
   constructor() {}
 
@@ -22,17 +23,25 @@ export class AuthInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<unknown>> {
     let token = localStorage.getItem('access_token');
 
-    if (token) {
+    if (token && request.url.indexOf('token') === -1) {
       request = request.clone({
         setHeaders: {
           Authorization: `Bearer ${token}`,
         },
       });
+      // } else if (this.route.snapshot.queryParamMap.get('code')) {
+      //   const code = this.route.snapshot.queryParamMap.get('code');
+      //   const sub = this.authService.getAccessToken(environment.client_id, code!).subscribe(res => {
+      //     request = request.clone({
+      //         setHeaders: {
+      //           Authorization: `Bearer ${res.access_token}`,
+      //         },
+      //       });
+      //   })
     }
 
     return next.handle(request).pipe(
       catchError((err: HttpErrorResponse) => {
-        console.log(err);
         if (err.status === 401) {
           return this.handle401(request, next, token);
         }
@@ -48,8 +57,30 @@ export class AuthInterceptor implements HttpInterceptor {
   ) {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
+
     if (token) {
-      return this.authService.refreshAccessToken(code!).pipe(
+      // localStorage.removeItem('access_token');
+
+      return this.authService.refreshAccessToken().pipe(
+        switchMap((res) => {
+          request = request.clone({
+            setHeaders: {
+              Authorization: `Bearer ${res.access_token}`,
+            },
+          });
+          return next.handle(request);
+        })
+      );
+      // .subscribe((res) => {
+      //   request = request.clone({
+      //     setHeaders: {
+      //       Authorization: `Bearer ${res.access_token}`,
+      //     },
+      //   });
+      //   return next.handle(request);
+      // });
+    } else if (code) {
+      return this.authService.getAccessToken(code!).pipe(
         switchMap((res) => {
           request = request.clone({
             setHeaders: {
@@ -68,26 +99,7 @@ export class AuthInterceptor implements HttpInterceptor {
       //   return next.handle(request);
       // });
     } else {
-      return this.authService.getAccessToken(environment.client_id, code!).pipe(
-        switchMap((res) => {
-          request = request.clone({
-            setHeaders: {
-              Authorization: `Bearer ${res.access_token}`,
-            },
-          });
-          return next.handle(request);
-        })
-      );
-      // .subscribe((res) => {
-      //   request = request.clone({
-      //     setHeaders: {
-      //       Authorization: `Bearer ${res.access_token}`,
-      //     },
-      //   });
-      //   return next.handle(request);
-      // });
+      return next.handle(request);
     }
-
-    // return next.handle(request);
   }
 }

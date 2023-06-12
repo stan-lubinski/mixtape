@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  inject,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { BehaviorSubject } from 'rxjs';
+import { PlaylistStorageService } from './services/playlist-storage.service';
+import { PlaylistModel, PlaylistService } from './services/playlist.service';
 
 @Component({
   selector: 'app-my-tapes',
@@ -6,46 +16,26 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrls: ['./my-tapes.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MyTapesComponent {
-  mockData = [
-    {
-      name: 'Playlist',
-    },
-    {
-      name: 'Playlist',
-    },
-    {
-      name: 'Playlist',
-    },
-    {
-      name: 'Playlist',
-    },
-    {
-      name: 'Playlist',
-    },
-    {
-      name: 'Playlist',
-    },
-    {
-      name: 'Playlist',
-    },
-    {
-      name: 'Playlist',
-    },
-    {
-      name: 'Playlist',
-    },
-    {
-      name: 'Playlist',
-    },
-    {
-      name: 'Playlist',
-    },
-    {
-      name: 'Playlist',
-    },
-    {
-      name: 'Playlist',
-    },
-  ];
+export class MyTapesComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+
+  get playlists$(): BehaviorSubject<PlaylistModel | null> {
+    return this.storage.playlists$;
+  }
+
+  constructor(
+    private httpService: PlaylistService,
+    private storage: PlaylistStorageService
+  ) {}
+
+  ngOnInit(): void {
+    this.getPlaylists();
+  }
+
+  getPlaylists() {
+    this.httpService
+      .getCurrentUsersPlaylists()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+  }
 }
